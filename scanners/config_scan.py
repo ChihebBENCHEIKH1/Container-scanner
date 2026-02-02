@@ -45,4 +45,28 @@ class ConfigScanner(BaseScanner):
                     "details": f"Port {port} is exposed in the image config."
                 })
 
+        # Check Labels
+        labels = config.get('Labels', {})
+        if not labels or ('maintainer' not in labels and 'org.opencontainers.image.authors' not in labels):
+            findings.append({
+                "scanner": self.name,
+                "severity": "LOW",
+                "description": "Missing Maintainer Label",
+                "details": "Image does not have a 'maintainer' or 'org.opencontainers.image.authors' label."
+            })
+
+        # Check Environment Variables for secrets
+        env_vars = config.get('Env', [])
+        SECRET_KEYWORDS = ['PASS', 'KEY', 'SECRET', 'TOKEN', 'AUTH']
+        for env in env_vars:
+            if any(keyword in env.upper() for keyword in SECRET_KEYWORDS):
+                # Verify it's not just a path or something innocuous
+                # usually env is in form KEY=VALUE
+                findings.append({
+                    "scanner": self.name,
+                    "severity": "HIGH",
+                    "description": "Potential Secret in Environment Variable",
+                    "details": f"Found environment variable that may contain a secret: {env.split('=')[0]}"
+                })
+
         return findings
