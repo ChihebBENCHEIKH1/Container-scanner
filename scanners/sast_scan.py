@@ -14,6 +14,9 @@ class SastScanner(BaseScanner):
         self.secret_patterns = {
             "AWS Access Key": re.compile(r'AKIA[0-9A-Z]{16}'),
             "Private Key": re.compile(r'-----BEGIN PRIVATE KEY-----'),
+            "Google Cloud API Key": re.compile(r'AIza[0-9A-Za-z\-_]{35}'),
+            "Slack Webhook": re.compile(r'https://hooks\.slack\.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}'),
+            "Azure Client Secret": re.compile(r'client_secret\s*=\s*[\'"][a-zA-Z0-9~._-]{34,40}[\'"]', re.IGNORECASE),
             "Generic Password": re.compile(r'password\s*=\s*[\'"][^\'"]+[\'"]', re.IGNORECASE)
         }
         # Max file size to scan (1MB) to avoid memory issues
