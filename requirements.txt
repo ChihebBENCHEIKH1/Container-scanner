@@ -1,4 +1,0 @@
-docker
-rich
-requests
-pyyaml
