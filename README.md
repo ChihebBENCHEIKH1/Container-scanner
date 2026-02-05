@@ -1,73 +1,62 @@
-# Container Security Scanner
+# GuardContainer
 
-A modular and extensible security analysis engine designed for Docker images. This tool implements a multi-stage security audit process, covering configuration analysis, Static Application Security Testing (SAST), and Dynamic Application Security Testing (DAST).
+High-performance container security orchestration and scanning engine rewritten in Go. GuardContainer provides a modular framework for auditing Docker images against configuration best practices, static analysis (SAST), and dynamic probing (DAST).
 
-## Architecture and Design
+![GuardContainer Dashboard](screenshots/dashboard.png)
 
-The system is built on a plugin-based provider pattern, ensuring high levels of decoupling and scalability.
+## Overview
 
-### Core Workflow
+GuardContainer is a senior-level security tool designed to identify vulnerabilities and misconfigurations in Docker images before they reach production. By leveraging the official Go Moby SDK, it offers superior performance and concurrency compared to traditional scripting approaches.
 
-1.  **Image Discovery**: The orchestrator utilizes the Docker SDK to pull or locate the target container image.
-2.  **Context Initialization**: A shared execution context is established, comprising the Docker client, temporary working directories, and image metadata.
-3.  **Plugin Execution**: The engine sequentially executes all registered scanner modules derived from the BaseScanner interface.
-4.  **Reporting**: Findings are aggregated and presented via a structured CLI output or exported as a JSON report.
+## Key Features
 
-### Design Objectives
+- **Multi-Layer Scanning Engine**:
+    - **Config Audit**: Inspects image metadata for root user execution, missing healthchecks, and exposed sensitive ports.
+    - **Secret Detection (SAST)**: Performs high-speed filesystem analysis to detect leaked credentials, API keys, and private certificates.
+    - **Dynamic Probing (DAST)**: Spins up ephemeral containers to verify HTTP security headers and identify leaked server metadata.
+- **Premium Web Dashboard**: A modern, glassmorphic React interface for visual scan orchestration and real-time reporting.
+- **CLI first**: Full support for automated CI/CD pipelines with JSON export capabilities.
+- **Senior Architecture**: Built with a clean, modular Go structure (`/cmd`, `/internal`, `/web`) for maximum maintainability.
 
--   **Decoupling**: The orchestrator remains agnostic to the internal logic of individual scanners, maintaining a strict interface-based interaction.
--   **Scalability**: The modular architecture allows for the seamless integration of new scan modules (e.g., OS vulnerability scanners) by extending the base classes.
--   **Resource Optimization**: The SAST module employs stream-based processing to analyze image layers without requiring full extraction to the host disk, significantly reducing I/O overhead.
-
-## Capabilities
-
-### 1. Configuration Audit
-Analyzes image metadata for compliance with security best practices:
--   **User Identity**: Detects containers configured to run with root privileges.
--   **Healthchecks**: Verifies the presence of health monitoring instructions.
--   **Exposed Ports**: Identifies potentially sensitive ports (e.g., SSH, database ports) declared in image metadata.
--   **Environment Analysis**: Scans environment variables for sensitive keywords that may indicate hardcoded credentials.
-
-### 2. Static Analysis (SAST)
-Performs deep-layer inspection of the container filesystem:
--   **Secret Detection**: Identifies credentials, private keys, and API tokens (AWS, GCP, Azure, Slack) within the image layers.
--   **Dependency Inventory**: Detects package manifests and dependency files for further inventory management.
-
-### 3. Dynamic Analysis (DAST)
-Probes the container in a controlled, ephemeral runtime environment:
--   **Network Validation**: Spawns the container with dynamic port mapping to prevent host conflicts.
--   **Security Header Audit**: Evaluates web services for the presence of defensive HTTP headers such as CSP, HSTS, and X-Frame-Options.
--   **Information Leakage**: Scans for server banners and headers that may expose underlying infrastructure details.
-
-## Getting Started
+## Installation
 
 ### Prerequisites
--   Docker Engine
--   Python 3.10 or higher
+- Go 1.23+
+- Docker Engine
+- Node.js (for frontend modifications)
 
-### Installation
-Install the required dependencies using the following command:
+### Build
 ```bash
-pip install -r requirements.txt
+# Clone the repository
+git clone <repository-url>
+cd Container-scanner
+
+# Build the binary
+go build -o container-scanner cmd/container-scanner/main.go
 ```
 
-### Usage
-Run a standard scan with formatted console output:
+## Usage
+
+### Web Interface
+Launch the premium dashboard:
 ```bash
-python3 main.py <target_image>
+sudo -E ./container-scanner serve --port 8080
+```
+Then navigate to `http://localhost:8080`.
+
+### CLI Scanning
+Perform a fast, one-time scan:
+```bash
+sudo -E ./container-scanner scan <image_name> --json report.json
 ```
 
-Export scan findings to a JSON file:
-```bash
-python3 main.py <target_image> --json report.json
-```
+## Project Structure
 
-## Technical Verification
-The project includes a comprehensive test suite. To run the automated tests, execute:
-```bash
-export PYTHONPATH=$PYTHONPATH:.
-python3 -m unittest discover tests
-```
+- `cmd/container-scanner`: Main application entry point.
+- `internal/scanners`: Core scanning logic and interface definitions.
+- `internal/api`: REST API implementation for the web interface.
+- `internal/utils`: Docker SDK wrappers and filesystem utilities.
+- `web/ui`: Modern React frontend source code and assets.
 
----
-*This project demonstrates expertise in DevSecOps system architecture and infrastructure automation.*
+## License
+MIT
