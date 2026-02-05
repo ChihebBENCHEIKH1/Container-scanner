@@ -58,5 +58,19 @@ sudo -E ./container-scanner scan <image_name> --json report.json
 - `internal/utils`: Docker SDK wrappers and filesystem utilities.
 - `web/ui`: Modern React frontend source code and assets.
 
+
+## Concurrency
+- **Parallel Scanning**: Instead of sequential processing, GuardContainer uses **Goroutines** and `sync.WaitGroup` to run all configured scanners in parallel. For a single image, this reduces total scan time to the duration of the slowest scanner.
+- **Asynchronous HTTP**: The Go `http` server handles each request in a dedicated goroutine, ensuring that one heavy scan never blocks the entire API for other users.
+
+## Security
+- **Local Enforcement**: By default, the API server binds strictly to `127.0.0.1`. This prevents the tool (which often requires elevated privileges) from being exposed to the network.
+- **Input Sanitization**: All image names are sanitized and validated to prevent command injection or path traversal attempts before reaching the Docker SDK.
+- **Process Isolation**: DAST scans are performed inside ephemeral, isolated containers with limited privileges.
+
+## Performance
+- **In-Memory Caching**: Implemented a thread-safe global cache for scan results. Re-scanning the same Image ID returns results instantly (marked in the API as `cached: true`), significantly reducing Docker daemon overhead.
+- **Stateless Design**: The scanner doesn't store heavy intermediate files, using streams where possible to minimize memory footprint.
+
 ## License
 MIT
